@@ -13,7 +13,7 @@
     "express-session": "^1.17.3",
     "http-errors": "~1.6.3",
     "jquery": "^3.7.0",
-    "jsdom": "^22.1.0",
+    "jsdom": "^16.4.0",
     "morgan": "~1.9.1",
     "sequelize": "^6.32.1",
     "sequelize-cli": "^6.6.1",
