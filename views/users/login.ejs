@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type"
+    conten="text/thml; charset=UTF-8"> 
+    <link rel='stylesheet' href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" 
+    crossorigin="anonymous" >
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+
+  <body class="container bgimage">
+
+    
+    <div class="gap2"></div>
+
+    <div role="main">
+        <p><%- content %></p>
+        
+        <div class="namepass">
+        <form method="post" action="/users/login">
+            <div class="form-group">
+                <label for="name">NAME</label>
+                <input type="text" name="name"  id="name" class="form-control form-size">
+            </div>
+            <div class="gap"></div>
+            <div class="form-group">
+                <label for="pass">PASSWORD</label>
+                <input type="password" name="pass"  id="pass" class="form-control form-size">
+            </div>
+            <div class="gap"></div>
+            <div class="loginbutton">
+            <input type="submit" value="login" class="usrbtn">
+            </div>
+
+        </form>
+        </div>
+
+        <div class="gap2"></div>
+
+        <div class="linktext" >
+        <p><a  href="/users/add">&lt;&lt; アカウントを作成する</a></p>
+        <div class="gap"></div>
+        <p><a href="/">&lt;&lt; Topへ戻る</a></p>
+        </div>
+
+    </div>
+ 
+  </body>
+</html>

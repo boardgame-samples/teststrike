@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@700&display=swap" rel="stylesheet">
+    
+  </head>
+<body onload="init()" text="white" body background="./images/table.jpg">
+  <div id="testbox" class="testbox">
+  <p>sample page</p>
+  </div>
+  <div id="canvascontainer" class="canvascontainer"> 
+    <canvas id="canvas" width="1000px" height="1000px">
+    <img id="background"   style="display:none" />   
+    </canvas> 
+  </div>  
+
+
+  <div class=myname id="myname"><%= login.name %></div>
+
+
+
+<script src="https://code.jquery.com/jquery-3.6.1.min.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+  function init(){
+    ;
+    var canvas = document.getElementById("canvas") 
+    ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(500,  500 , 400, 0, 2*Math.PI);
+        ctx.closePath();
+        ctx.fill();
+  }
+
+  window.addEventListener("load", ()=>{
+    var testbox = document.getElementById("testbox")
+    const cc = document.querySelector(".canvascontainer")
+    cc.addEventListener("touchstart", function(e){
+        // 端末のデフォルト動作をキャンセル
+        e.preventDefault();
+
+        // タッチ開始情報を取得
+        const touches = e.touches;
+        const offset = this.getBoundingClientRect();
+
+        let touchValue = "";
+
+            const x = Math.floor(touches[0].pageX - offset.left);   // x座標
+            const y = Math.floor(touches[0].pageY - offset.top);    // y座標
+            touchValue += `touches[${0}] x: ${x}, y: ${y}<br>`;
+        
+
+        testbox.innerHTML = touchValue;
+    });
+});
+
+
+
+
+
+  var myname = document.getElementById("myname").textContent
+
+    const socket = io();
+
+    socket.on("reset", (data)=>{
+      var rp =data.resetplayer;
+      alert(rp + 'がGAMEをRESETしました')
+      window.location.href = '/game'
+
+    });
+
+</script>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@700&display=swap" rel="stylesheet">
+    
+  </head>
+<body   text="white" body background="./images/table.jpg">
+
+
+  <div class="wrap">
+    <!-- 以下がモーダルで呼ばれる -->
+    <div class="modalBox" id="modal1">
+      <div id="modalp" class="modalInner padding0" >
+        <div><span class="modalupper" id="modalInner"></span></div>
+        <div><span class="modallower" id="modallower"></span></div>
+      </div>
+    </div>
+  </div>
+
+
+
+  <div class="container">
+
+    <div class="reset-button">
+      <form  method="post" action="/game/reset">
+      <input class="resetinput" name="reset" id="reset" value="Game Reset" type="submit" />
+      </form>
+    </div>
+
+  <table class="playerinfo" id="playerinfo">
+    <tr class="playertr">
+
+      <% for(i=0; i<4; i++){ %>
+        <% if(playerlist[i] != null){ %>
+          <td class="players player<%= i %>" id="player<%= i %>">
+            <p>Player&nbsp;:&nbsp;<%= playerlist[i] %></p>
+            <p>Point&nbsp;:&nbsp;<span id="point<%= i %>">0</span></p>
+          </td>
+      <% }else{ %>
+          <td class="hidden player<%= i %>"></td>
+        <%} %>
+      <%} %>
+
+      <!--
+      <td class="player0">0:name</td>     
+      <td class="player1">1:name</td>
+      <td class="player2">2:name</td>
+      <td class="player3">3:name</td>    
+             --> 
+    </tr>
+  </table>
+
+  <div class="gap"></div>
+
+  <table class="message">
+    <tr>
+      <td><span id="message" class="message_text">Now loading.....</span></td>
+    </tr>
+  </table>
+
+  <div class="gap"></div>
+
+<% if(playerlist.includes(login.name)){ %>
+
+<div id="onlymyturn">
+
+  <div class="buttonarea">
+
+  <table class="rolltable">
+    <tr>
+      <td class="rollel">
+        <form method="post" action="/game/roll">
+        <input class="btn" name="roll" id="roll" value="Roll" type="submit" />
+        </form>
+      </td>
+  <!--         <div id="stopel">   -->
+      <td class="or">
+        <p>or</p>
+      </td>
+      <td class="stopel">
+        <form method="post" action="/game/stop">
+        <input class="btn" name="stop" id="stop" value="stop" type="submit" />
+        </form>
+      </td>
+   <!--           </div>    -->
+    </tr>
+  </table>
+
+
+  <table class="choicetable">
+    <tr><td class="choiceel">
+      <div id="diceform"></div>
+    </td>
+    </tr>
+
+  </table>
+
+  <table class="confirmtable">
+    <tr><td>
+      <div id="confirmation"></div>
+    </td>
+    </tr>
+  </table>
+  </div>
+
+</div>
+
+<% } %>
+
+  <!--
+    <canvas class="canvas" id="canvas" width="1100px" height="1100px">
+      <img id="background" src="./images/1100px.png" style="display:none" />
+    </canvas>     -->
+
+  <div class="dicetablebox">
+  <table class="dicetable" background="./images/dicetable.png">
+    <tr>
+      <td><div class="diceimage" id="diceimage"></div></td> 
+    </tr>
+  </table>
+  </div>
+
+
+    <div id="canvascontainer" class="canvascontainer"> 
+    <canvas id="canvas" >
+    <img id="background" src="./images/1100px.png"  style="display:none" />   
+    </canvas> 
+    </div>  
+
+    <div class="bottomlink">
+    <a class="underline" href="/">&lt;&lt; Topへ戻る</a>
+    </div>
+
+<!--
+    <div class="temp">
+      <p>temp_status =<span id="temp_status"></span></p>
+      <p>players =<span id="players"></span></p>
+      </div>
+-->
+
+    <div class=myname id="myname"><%= login.name %></div>
+
+
+  <script src="https://code.jquery.com/jquery-3.6.1.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+
+<script>
+  var myname = document.getElementById("myname").textContent
+
+  function Display(data){
+    var burst_status = data.burst_status
+//    console.log(data.move_status)
+ //      document.getElementById("temp_status").textContent = data.temp_status
+
+      var text = ''
+      var players = data.players
+
+    var rollel = document.querySelector('.rollel')  ;
+    var stopel = document.querySelector('.stopel')  ;
+    var choiceel = document.querySelector('.choiceel')
+    var or = document.querySelector('.or')  ;
+    var rollstatus = data.rollstatus;
+    var stopstatus = data.stopstatus;
+    var choicestatus = data.choicestatus;
+    var order = data.order;
+
+    console.log(rollstatus)
+    console.log(burst_status)
+
+  if(burst_status == 1){
+      var modalInner =document.getElementById('modalInner')
+      var modalInner =document.getElementById('modallower')
+      var players = data.players
+      var order = data.order
+      var preorder
+
+      if(order == 0){
+        preorder = players.length - 1
+      }else{
+        preorder = order - 1;
+      }
+
+
+      modallower.innerHTML = ''
+
+    if(players[preorder].name == myname){
+      modalInner.innerHTML =   "<p>バーストしました</p>";
+    }else{
+      modalInner.innerHTML =   "<p>" + players[preorder].name + "がバーストしました</p>";
+    }
+
+    modal(0,data);
+  }
+
+    if(rollstatus == 0){
+      rollel.style.display = "none";
+    }else{
+      rollel.style.display = "block";
+    }
+    if(stopstatus == 0){
+     stopel.style.display = "none";
+     or.style.display ="none";
+    }else{
+    stopel.style.display = "block";
+    or.style.display = "";
+    }
+    if(choicestatus == 0){
+      choiceel.style.display = "none";
+    }else{
+      choiceel.style.display = "block";
+    }
+    
+
+
+
+      for (var i in players){
+        text = text + "■"  + i + ":" + data.players[i].status;
+      }
+//      document.getElementById("players").textContent = text
+
+       //document.getElementById("testtext").textContent = data.dice
+
+       var diceform = document.getElementById("diceform")
+       diceform.innerHTML = '';
+       const form = document.createElement('form');
+       form.action = '/game/confirm'
+       form.method = 'POST'
+       var dice_array = data.dice_array
+
+       //arrayのフォームを表示
+       if(dice_array.length != 0){
+
+       for(var i in dice_array){
+       const input = document.createElement('input')
+       var obj = dice_array[i]
+       var a = "array" + i
+       input.type = 'submit'
+       input.value = obj
+       input.name = a
+       input.classList.add("choicebutton")
+       input.classList.add("choicenumber")
+       form.appendChild(input)
+       }
+        //document.querySelector('div').appendChild(form)
+         diceform.appendChild(form);
+        }
+
+       var confirmation = document.getElementById('confirmation')
+       confirmation.innerHTML = '';
+       const form2 = document.createElement('form');
+       form2.action = '/game/choice'
+       form2.method = 'POST'
+        
+        numbers = data.numbers
+        //どちらの数字かの選択フォームを出現
+        if(numbers.length != 0){
+        for(var i in numbers) { 
+          const input = document.createElement('input')
+        var obj = numbers[i]
+        var a = "numbers" + i 
+        input.type = 'submit'
+       input.value = obj
+       input.name = a
+       input.classList.add("choicebutton")
+       input.classList.add("choicenumber")
+       form2.appendChild(input)
+        }
+       confirmation.appendChild(form2);
+      }
+
+      //ダイスを表示
+      var diceimage = document.getElementById("diceimage");
+      diceimage.innerHTML = '';
+      var dice = data.dice
+      console.log(dice);
+      for(i=0; i<4; i++){
+        var dicevalue = dice[i]
+        if(dicevalue != 0){
+        const img_element = document.createElement('img');
+        img_element.src = "./images/dice" + dicevalue + ".png"
+
+        diceimage = document.getElementById("diceimage");
+        diceimage.appendChild(img_element);
+        }
+      }
+
+    //メッセージを表示
+      var action_status = data.action_status
+      var message = document.getElementById("message")
+      var difference_status = data.difference_status;
+
+
+
+
+    for(var i in players){
+      var pi = document.getElementById('player' + i);
+      if(i == order){
+        pi.classList.add('turnborder')
+      }else{
+        pi.classList.remove('turnborder');
+      }
+
+      var pp = document.getElementById('point' + i)
+      if(players[i].point.length == 0){
+        pp.innerHTML = 0
+      }else{
+       pp.innerHTML = players[i].point
+      }
+
+    }
+
+
+
+    if(players[order].name == myname){
+      if(action_status == 0){
+        message.innerHTML = "<p>-あなたのターン-</p>"+ "<p>ダイスを振ってください</p>";
+      var onlymyturn = document.getElementById("onlymyturn");
+      onlymyturn.style.display = 'block';
+
+    }else if(action_status == 1){
+      message.innerHTML = "<p>-あなたのターン-</p>"+ "<p>ダイスを振るか終了してください</p>";
+      var onlymyturn = document.getElementById("onlymyturn");
+      onlymyturn.style.display = 'block';
+      ;
+    }else if(action_status == 2){
+      message.innerHTML = "<p>-あなたのターン-</p>"+ "<p>以下の組み合わせを選んでください</p>";
+      var onlymyturn = document.getElementById("onlymyturn");
+      onlymyturn.style.display = 'block';
+
+    }else if(action_status == 3){
+      message.innerHTML = "<p>-あなたのターン-</p>" + "<p>以下の数字を選んでください</p>";
+      var onlymyturn = document.getElementById("onlymyturn");
+      onlymyturn.style.display = 'block';
+
+    }else if(action_status == 4){
+      message.innerHTML = "<p>-あなたのターン-</p>" + "<p>ターンを終了します</p>";
+      var onlymyturn = document.getElementById("onlymyturn");
+      onlymyturn.style.display = 'none';
+
+    }
+
+    }else{
+      if(action_status == 0){
+      message.innerHTML = "<p>-" + players[order].name + "のターン-</p>" + "<p>考察中.....</p>";
+
+    }else if(action_status == 1){
+      message.innerHTML = "<p>-" + players[order].name + "のターン-</p>"+
+                          "<p>" + players[order].name +"が" + difference_status + "を選びました</p>";
+      ;
+    }else if(action_status == 2){
+      message.innerHTML = "<p>-" + players[order].name + "のターン-</p>"+
+                          "<p>" + players[order].name +"がダイスを振りました</p>";
+    }else if(action_status == 3){
+      message.innerHTML = "<p>-" + players[order].name + "のターン-</p>"+
+                          "<p>" + players[order].name +"がダイスを振りました</p>";
+    }else if(action_status == 4){
+      message.innerHTML = "<p>-" + players[order].name + "のターン-</p>"+
+                          "<p>" + players[order].name +"がターンを終了しました</p>";
+    }
+    var onlymyturn = document.getElementById("onlymyturn");
+    onlymyturn.style.display = 'none'
+    }
+
+    
+
+      //canvas で描画
+//    var w = $('.canvascontainer').width
+//      $('#canvas').attr('width', w);
+//      $('#canvas').attr('height', w);
+//    var w = document.getElementById('canvascontainer').clientWidth;
+   // let img = new Image();
+  //  let imgsrc = "./images/1100.png";
+
+
+    var canvascontainer = document.getElementById("canvascontainer")
+    var background = document.getElementById("background")
+    var canvas = document.getElementById("canvas") 
+    ctx = canvas.getContext("2d");
+
+    canvas.width = canvascontainer.offsetWidth;
+    canvas.height = canvascontainer.offsetHeight;
+    console.log(canvas.width)
+    console.log(canvas.height)
+    //画像を表示
+   // img.src = imgsrc;
+      ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
+
+
+
+    for(var i in players){
+      var status = players[i].status
+      for(j=0; j<11; j++){
+      if(status[j] != 0){
+        Draw(j, status[j], i);
+      }
+      }
+    }
+//    var status = data.temp_status
+//    for(j=0; j<11; j++){
+//      if(status[j] != 0){
+//        Draw(j, status[j], 4);
+//      }
+//      }
+
+      var status = data.move_status
+    for(j=0; j<11; j++){
+      if(status[j] != 0){
+        Draw(j, status[j], 4);
+      }
+      }  
+
+  };
+
+    function Draw(a,b,c){
+      var w = canvas.width;
+      if(c == 0){
+        ctx.fillStyle = "#355E3B";
+        ctx.beginPath();
+        ctx.arc((100 + (a + 1)*70 + 22)/1100*w,  (992 -((b - 1 + Math.abs(7-a-2))*70 +30 ))/1100*w , w/55, 0, 2*Math.PI);
+        //ctx.arc( (1+ 18*( (a + 1)*35 + 15))/11*w ,  (1 + 18*(450 -((b - 1 + Math.abs(7-a-2))*35 +15 )))/11*w , 15, 0, 2*Math.PI);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      if(c == 1){
+        ctx.fillStyle = "#ffff00";
+        ctx.beginPath();
+        ctx.arc((100 + (a + 1)*70 + 38)/1100*w,  (992 -((b - 1 + Math.abs(7-a-2))*70 +30 ))/1100*w , w/55, 0, 2*Math.PI);
+ //       ctx.arc((a + 1)*35 + 15, 450 -((b - 1 + Math.abs(7-a-2))*35 +15 ), 15, 0, 2*Math.PI);
+        ctx.closePath();
+        ctx.fill();
+      }
+      if(c == 2){
+        ctx.fillStyle = "#0000ff";
+        ctx.beginPath();
+        ctx.arc((100 + (a + 1)*70 + 38)/1100*w,  (1008 -((b - 1 + Math.abs(7-a-2))*70 +30 ))/1100*w , w/55, 0, 2*Math.PI);
+//        ctx.arc((a + 1)*35 + 15, 450 -((b - 1 + Math.abs(7-a-2))*35 +15 ), 15, 0, 2*Math.PI);
+        ctx.closePath();
+        ctx.fill();
+      }
+      if(c == 3){
+        ctx.fillStyle = "#000000";
+        ctx.beginPath();
+        ctx.arc((100 + (a + 1)*70 + 22)/1100*w,  (1008 -((b - 1 + Math.abs(7-a-2))*70 +30 ))/1100*w , w/55, 0, 2*Math.PI);
+//        ctx.arc((a + 1)*35 + 15, 450 -((b - 1 + Math.abs(7-a-2))*35 +15 ), 15, 0, 2*Math.PI);
+        ctx.closePath();
+        ctx.fill();
+      }
+      if(c == 4){
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+       // ctx.arc((a + 1)*35 + 15, 450 -((b - 1 + Math.abs(7-a-2))*35 +15 ), 10, 0, 2*Math.PI);
+       ctx.arc((100 + (a + 1)*70 + 30)/1100*w,  (1000 -((b - 1 + Math.abs(7-a-2))*70 +30 ))/1100*w , 3*w/220, 0, 2*Math.PI);
+        ctx.closePath();
+        ctx.fill();
+      }
+    }
+    
+    function calcu(a,b){
+      console.log((a + 1)*35 + 15)
+      console.log(450 -((b - 1 + Math.abs(7-a-2))*35 +15))
+    }
+
+    const socket = io();
+    socket.on("renew", (data)=>{
+      console.log(data)
+      Display(data);
+    });
+
+    socket.on("reset", (data)=>{
+      var rp =data.resetplayer;
+      alert(rp + 'がGAMEをRESETしました')
+      window.location.href = '/game'
+
+    });
+
+    socket.on("end", (data)=>{
+      var modalInner =document.getElementById('modalInner')
+      var modalInner =document.getElementById('modallower')
+      var players = data.players
+      var order = data.order
+      var modalp = document.getElementById('modalp')
+
+      modalp.classList.remove('padding0')
+      modalp.classList.add('padding1')
+
+      modallower.innerHTML = "※STARTページへ戻ります"
+
+    if(players[order].name == myname){
+      modalInner.innerHTML = "<p>あなたの勝利です</p>" + "<p>congratulations!</p>";
+    }else{
+      modalInner.innerHTML =   players[order].name + "の勝利です";
+    }
+    
+      modal(1,'');
+    });
+
+  function modal(i,data){
+
+	//.modalについたhrefと同じidを持つ要素を探す
+	var modalThis = $('body').find('#modal1');
+	//bodyの最下にwrapを作る 
+	$('body').append('<div id="modalWrap" />');
+	var wrap = $('#modalWrap'); wrap.fadeIn('200');
+	modalThis.fadeIn('200');
+	//モーダルの高さを取ってくる 
+	function mdlHeight() {
+		var wh = $(window).innerHeight();
+		var attH = modalThis.find('.modalInner').innerHeight();
+		modalThis.css({ height: attH });
+	}
+	mdlHeight();
+	$(window).on('resize', function () {
+		mdlHeight();
+	});
+
+
+	function clickAction(data) {
+    if(i == 1){
+      window.location.href = '/game';
+    }else if(i==0){
+		modalThis.fadeOut('200');
+		wrap.fadeOut('200', function () {
+    wrap.remove();
+    burst_status == 0
+    Display(data)
+		});
+    }
+	}
+
+	//wrapクリックされたら 
+	//wrap.on('click', function () {
+	//	clickAction(); return false;
+	//  });
+
+  if(i == 1){
+    	//10秒後にriset 
+//	setTimeout(clickAction(), 10000); return false;
+setTimeout(function(){
+    clickAction()}, 10000);
+
+
+  }else if(i == 0){
+        	//2秒後にriset 
+//	setTimeout(clickAction(data), 2000); return false;
+setTimeout(function(){
+    clickAction(data)}, 2000);
+
+
+  }
+}
+
+
+</script>
+
+</div>
+</body>
+</html>
