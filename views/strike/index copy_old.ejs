@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link rel='stylesheet' href='/stylesheets/style-strike.css' />
+  <!-- 
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@700&display=swap" rel="stylesheet">
+  -->
+</head>
+
+<body text="white" class="bgimage">
+
+
+  <div id="startarea">
+    <div class="gap"></div>
+    <div class="message startmsg">
+      <p>現在<span class="participant" id="pn">
+          <%= playerlist.length %>
+        </span>人<span id="participant"></span>が参加中です</p>
+      <p>全員が参加後にSTARTしてください</p>
+      <p><span id="max"></span></p>
+    </div>
+    <table class="join">
+      <tr>
+        <td>
+          <form method="post" action="/strike/join">
+            <input name="join" id="join" value="Join" type="submit" class="joinbtn" />
+          </form>
+        </td>
+        <td>
+          <form method="post" action="/strike/exit">
+            <input name="exit" id="exit" value="Exit" type="submit" class="joinbtn" />
+          </form>
+        </td>
+
+      </tr>
+    </table>
+
+    <div class="gamestart">
+      <form method="post" action="/strike/start">
+        <input name="start" id="start" value="&gt;&gt;&nbsp;GAME START" type="submit" class="startbtn" />
+      </form>
+    </div>
+  </div>
+  <div id="boardarea" class="none">
+
+    <div id="canvascontainer" class="canvascontainer">
+      <canvas id="canvas" width="1000px" height="1000px">
+        <img id="background" style="display:none" />
+      </canvas>
+    </div>
+
+    <div class="reset-button">
+      <form method="post" action="/strike/reset">
+        <input class="resetinput" name="reset" id="reset" value="Game Reset" type="submit" />
+      </form>
+    </div>
+
+  </div>
+
+
+  <div class="bottomlink">
+    <a class="linktext underline" href="/">&lt;&lt; Topへ戻る</a>
+  </div>
+
+  <div id="testbox" class="testbox">
+    <p>sample page</p>
+    <span id="testbox1"></span>
+  </div>
+
+  <div class=myname id="myname">
+    <%=login %>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+
+  <script>
+    var move_animation = 0;
+    var myname = document.getElementById("myname").textContent
+
+    /////////////////////////////////////////////////////////////////////
+    class board_dice {
+      constructor(value, current, rotate) {
+        this.value = value
+        this.current = current
+        this.rotate = rotate
+        this.move = 0
+        this.next = []
+        this.vector = []
+      }
+    }
+
+
+    /////////////////////////////////////////////////////////////////////
+    function Display(data) {
+      var pn = document.getElementById('pn');
+      var plist = data.playerlist;
+      plength = data.playerlist.length;
+      pn.textContent = plength;
+      ;
+      var participant = document.getElementById('participant');
+      var J = document.getElementById("join")
+      var E = document.getElementById("exit")
+
+      console.log(myname)
+      console.log(typeof (myname))
+      var toString = Object.prototype.toString;
+      console.log(toString.call(myname))
+
+      //つぎに、joinが白文字exitが黒文字になる設定。
+      if (data.word == "join") {
+        participant.innerHTML = '(<span class="participant">' + data.playerlist + '</span>)'
+
+        //自分の名前がまだ登録してない　playerlistにないとき
+        if (plist.includes(myname)) {
+          J.classList.add("textwhite")
+          E.classList.remove("textwhite")
+          console.log('test' + myname)
+        }
+
+      } else if (data.word == "exit") {
+        if (plength != 0) {
+          participant.innerHTML = '(<span class="participant">' + data.playerlist + '</span>)'
+        } else {
+          participant.innerHTML = ""
+        }
+
+        if (plist.includes(myname)) {
+          ;
+        } else {
+          E.classList.add("textwhite")
+          J.classList.remove("textwhite")
+        }
+
+      }
+    }
+
+    /////////////////////////////////////////////////////////////////////
+    function Renew(data) {
+      var barea = document.getElementById('boardarea')
+      var sarea = document.getElementById('startarea')
+      var board_dices = data.board_dices
+      var players = data.players
+
+      var canvas = document.getElementById("canvas")
+      barea.classList.remove("none")
+      sarea.classList.add("none")
+
+      ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, 1000, 1000)
+      /*      ctx.fillStyle = "#ffffff";
+            ctx.beginPath();
+            ctx.arc(500, 500, 400, 0, 2 * Math.PI);
+            ctx.closePath();
+            ctx.fill();  */
+
+      for (var i in board_dices) {
+
+        ctx.fillStyle = "#111111";
+
+        var x = board_dices[i].current[0]
+        var y = board_dices[i].current[1]
+        var z = board_dices[i].value
+        var r = board_dices[i].rotate
+
+        ctx.translate(x, y);
+        ctx.rotate(r * Math.PI / 180);
+        ctx.translate(-x, -y);
+        Draw_dice(x, y, z)
+        ctx.translate(x, y);
+        ctx.rotate(-r * Math.PI / 180);
+        ctx.translate(-x, -y);
+
+      }
+
+      var testbox1 = document.getElementById('testbox1')
+      testbox1.innerHTML = 'player_dicenumber:' + players[0].dice_number
+
+    }
+
+    /////////////////////////////////////////////////////////////////////
+    function Move(data) {
+      var board_dices = data.board_dices
+      var players = data.players
+      var canvas = document.getElementById("canvas")
+      var move_dice = data.move_dice
+      var count = 0
+
+      ctx = canvas.getContext("2d");
+
+
+      function loop(timestamp) {
+        /////////////////move_diceのアニメーション処理///////////////
+        if (count % 5 == 0 && count < 95) {
+          ctx.clearRect(0, 0, 1000, 1000)
+
+
+
+          /*      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(500, 500, 400, 0, 2 * Math.PI);
+      ctx.closePath();
+      ctx.fill();  */
+
+          for (var i in board_dices) {
+            ctx.fillStyle = "#111111";
+
+            var x = board_dices[i].current[0]
+            var y = board_dices[i].current[1]
+            var z = board_dices[i].value
+            var r = board_dices[i].rotate
+
+            ctx.translate(x, y);
+            ctx.rotate(r * Math.PI / 180);
+            ctx.translate(-x, -y);
+            Draw_dice(x, y, z)
+            ctx.translate(x, y);
+            ctx.rotate(-r * Math.PI / 180);
+            ctx.translate(-x, -y);
+          }
+
+          if (count < 90) {
+            var z = Math.floor(Math.random() * 6) + 1;
+          } else {
+            var z = move_dice.value
+          }
+
+          var r = 9 * (Math.floor(Math.random() * 10) + 1);
+          var x = move_dice.origin[0]
+          var y = move_dice.origin[1]
+          ctx.fillStyle = "#111111";
+
+          ctx.translate(x, y);
+          ctx.rotate(r * Math.PI / 180);
+          ctx.translate(-x, -y);
+          Draw_dice(x, y, z)
+          ctx.translate(x, y);
+          ctx.rotate(-r * Math.PI / 180);
+          ctx.translate(-x, -y);
+
+          move_dice.origin[0] += move_dice.vector[0] / 20
+          move_dice.origin[1] += move_dice.vector[1] / 20
+        }
+
+        /////////////////board_dicesのアニメーション処理///////////////
+        else if (count % 5 == 0 && count >= 95 && count < 195) {
+          ctx.clearRect(0, 0, 1000, 1000)
+
+
+          /*      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(500, 500, 400, 0, 2 * Math.PI);
+      ctx.closePath();
+      ctx.fill();  */
+
+          for (var i in board_dices) {
+            if (board_dices[i].move == 0) {
+              ctx.fillStyle = "#111111";
+
+              var x = board_dices[i].current[0]
+              var y = board_dices[i].current[1]
+              var z = board_dices[i].value
+              var r = board_dices[i].rotate
+
+              ctx.translate(x, y);
+              ctx.rotate(r * Math.PI / 180);
+              ctx.translate(-x, -y);
+              Draw_dice(x, y, z)
+              ctx.translate(x, y);
+              ctx.rotate(-r * Math.PI / 180);
+              ctx.translate(-x, -y);
+
+            } else if (board_dices[i].move == 1) {
+
+              if (count < 190) {
+                var z = Math.floor(Math.random() * 6) + 1;
+                var r = 9 * (Math.floor(Math.random() * 10) + 1);
+              } else {
+                var z = board_dices[i].nextvalue
+                var r = board_dices[i].rotate
+              }
+
+              var x = board_dices[i].current[0]
+              var y = board_dices[i].current[1]
+              ctx.fillStyle = "#111111";
+
+              ctx.translate(x, y);
+              ctx.rotate(r * Math.PI / 180);
+              ctx.translate(-x, -y);
+              Draw_dice(x, y, z)
+              ctx.translate(x, y);
+              ctx.rotate(-r * Math.PI / 180);
+              ctx.translate(-x, -y);
+
+              board_dices[i].current[0] += board_dices[i].vector[0] / 20
+              board_dices[i].current[1] += board_dices[i].vector[1] / 20
+
+            }
+          }
+        }
+
+        /////////////////２つのアニメーション終わったらリターン///////////////
+        else if (count >= 195) {
+          move_animation = 1;
+          return;
+        }
+
+        if (count == 94) {
+          const bd = new board_dice(move_dice.value, move_dice.current, move_dice.rotate)
+          board_dices.push(bd)
+        }
+
+        count += 1;
+        window.requestAnimationFrame((ts) => loop(ts));
+      }
+      window.requestAnimationFrame((ts) => loop(ts));
+    }
+
+
+
+    /////////////////////////////////////////////////////////////////////
+    function Add_Delete(data) {
+      //var barea = document.getElementById('boardarea')
+      //var sarea = document.getElementById('startarea')
+      var board_dices = data.board_dices;
+      var delete_dices = data.delete_dices;
+      var add_dices = data.add_dices;
+      var count2 = 0
+
+      var canvas = document.getElementById("canvas")
+      // barea.classList.remove("none")
+      // sarea.classList.add("none")
+      ctx = canvas.getContext("2d");
+
+      //////////0.5秒ごとにadd_dices, delete_dicesのみを2.5秒表示、非表示する。
+      function loop(timestamp) {
+        ///////ここからループ処理を記入, 20countごとに更新。
+        if (count2 % 20 == 0 && count2 < 130) {
+
+          ctx.clearRect(0, 0, 1000, 1000)
+
+          /*      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(500, 500, 400, 0, 2 * Math.PI);
+      ctx.closePath();
+      ctx.fill();  */
+
+          for (var i in board_dices) {
+            ctx.fillStyle = "#111111";
+            var x = board_dices[i].current[0]
+            var y = board_dices[i].current[1]
+            var z = board_dices[i].value;
+            var r = board_dices[i].rotate
+
+            ctx.translate(x, y);
+            ctx.rotate(r * Math.PI / 180);
+            ctx.translate(-x, -y);
+            Draw_dice(x, y, z)
+            ctx.translate(x, y);
+            ctx.rotate(-r * Math.PI / 180);
+            ctx.translate(-x, -y);
+          }
+
+          if ((count2 / 20) % 2 == 1) {
+            ///////////add, deleteを表示
+            for (var i in delete_dices) {
+              ctx.fillStyle = "#ff0000";
+              var x = delete_dices[i].current[0]
+              var y = delete_dices[i].current[1]
+              var z = delete_dices[i].value;
+              var r = delete_dices[i].rotate
+
+              ctx.translate(x, y);
+              ctx.rotate(r * Math.PI / 180);
+              ctx.translate(-x, -y);
+              Draw_dice(x, y, z)
+              ctx.translate(x, y);
+              ctx.rotate(-r * Math.PI / 180);
+              ctx.translate(-x, -y);
+            }
+
+            for (var i in add_dices) {
+              ctx.fillStyle = "#ffdc00";
+              var x = add_dices[i].current[0]
+              var y = add_dices[i].current[1]
+              var z = add_dices[i].value;
+              var r = add_dices[i].rotate
+
+              ctx.translate(x, y);
+              ctx.rotate(r * Math.PI / 180);
+              ctx.translate(-x, -y);
+              Draw_dice(x, y, z)
+              ctx.translate(x, y);
+              ctx.rotate(-r * Math.PI / 180);
+              ctx.translate(-x, -y);
+            }
+          }
+
+
+        } else if (count2 >= 130) {
+          return;
+        }
+
+
+        count2 += 1;
+        window.requestAnimationFrame((ts) => loop(ts));
+      }
+      window.requestAnimationFrame((ts) => loop(ts));
+    }
+
+
+
+    /////////////////////////////////////////////////////////////////////
+    function Draw_dice(x, y, z) {
+
+      ctx.strokeRect(x, y, 50, 50);
+      ctx.beginPath();
+
+      switch (z) {
+        case 1:
+          ctx.arc(x + 25, y + 25, 5, 0, 2 * Math.PI);
+          ctx.closePath();
+          ctx.fill();
+          break;
+        case 2:
+          ctx.arc(x + 15, y + 15, 5, 0, 2 * Math.PI);
+          ctx.closePath();
+          ctx.fill();
+          ctx.arc(x + 35, y + 35, 5, 0, 2 * Math.PI);
+          ctx.closePath();
+          ctx.fill();
+          break;
+        case 3:
+          ctx.arc(x + 25, y + 25, 5, 0, 2 * Math.PI);
+          ctx.closePath();
+          ctx.fill();
+          ctx.arc(x + 12, y + 38, 5, 0, 2 * Math.PI);
+          ctx.closePath();
+          ctx.fill();
+          ctx.arc(x + 38, y + 12, 5, 0, 2 * Math.PI);
+          ctx.closePath();
+          ctx.fill();
+          break;
+        case 4:
+          ctx.arc(x + 15, y + 15, 5, 0, 2 * Math.PI);
+          ctx.closePath();
+          ctx.fill();
+          ctx.arc(x + 35, y + 35, 5, 0, 2 * Math.PI);
+          ctx.closePath();
+          ctx.fill();
+          ctx.arc(x + 15, y + 35, 5, 0, 2 * Math.PI);
+          ctx.closePath();
+          ctx.fill();
+          ctx.arc(x + 35, y + 15, 5, 0, 2 * Math.PI);
+          ctx.closePath();
+          ctx.fill();
+          break;
+        case 5:
+          ctx.arc(x + 25, y + 25, 5, 0, 2 * Math.PI);
+          ctx.closePath();
+          ctx.fill();
+          ctx.arc(x + 12, y + 38, 5, 0, 2 * Math.PI);
+          ctx.closePath();
+          ctx.fill();
+          ctx.arc(x + 38, y + 12, 5, 0, 2 * Math.PI);
+          ctx.closePath();
+          ctx.fill();
+          ctx.arc(x + 12, y + 12, 5, 0, 2 * Math.PI);
+          ctx.closePath();
+          ctx.fill();
+          ctx.arc(x + 38, y + 38, 5, 0, 2 * Math.PI);
+          ctx.closePath();
+          ctx.fill();
+          break;
+        case 6:
+          ctx.arc(x + 15, y + 10, 5, 0, 2 * Math.PI);
+          ctx.closePath();
+          ctx.fill();
+          ctx.arc(x + 15, y + 25, 5, 0, 2 * Math.PI);
+          ctx.closePath();
+          ctx.fill();
+          ctx.arc(x + 15, y + 40, 5, 0, 2 * Math.PI);
+          ctx.closePath();
+          ctx.fill();
+          ctx.arc(x + 35, y + 10, 5, 0, 2 * Math.PI);
+          ctx.closePath();
+          ctx.fill();
+          ctx.arc(x + 35, y + 25, 5, 0, 2 * Math.PI);
+          ctx.closePath();
+          ctx.fill();
+          ctx.arc(x + 35, y + 40, 5, 0, 2 * Math.PI);
+          ctx.closePath();
+          ctx.fill();
+          break;
+      }
+
+    }
+
+
+    window.addEventListener("load", () => {
+      var testbox = document.getElementById("testbox")
+      const cc = document.getElementById("canvascontainer")
+      let touch_start
+      let start_time
+      let touch_end
+      let end_time
+
+
+      cc.addEventListener("touchstart", function (e) {
+        // 端末のデフォルト動作をキャンセル
+        e.preventDefault();
+
+        // タッチ開始情報を取得
+        const touches = e.touches;
+        const offset = this.getBoundingClientRect();
+
+        const p = Math.floor(touches[0].pageX - offset.left);   // x座標
+        const q = Math.floor(touches[0].pageY - offset.top);    // y座標
+        touch_start = [p, q]
+        start_time = Date.now();
+
+        //        testbox.innerHTML =  touch_start + ":" + start_time;
+        //        socket.emit("touchstart", touchValue); 
+      });
+
+
+      cc.addEventListener("touchend", function (e) {
+        // 端末のデフォルト動作をキャンセル
+        e.preventDefault();
+
+        // タッチ終了情報を取得
+        const touchesE = e.changedTouches;
+
+        // ページ上のオフセット位置取得
+        const offset = this.getBoundingClientRect();
+
+        const s = Math.floor(touchesE[0].pageX - offset.left);   // x座標
+        const t = Math.floor(touchesE[0].pageY - offset.top);    // y座標
+        touch_end = [s, t];
+        end_time = Date.now();
+        //       testbox.innerHTML =  touch_end + ":" + end_time;
+        var distance_s = Math.sqrt((500 - touch_start[0]) ** 2 + (500 - touch_start[1]) ** 2)
+        var distance_e = Math.sqrt((500 - touch_end[0]) ** 2 + (500 - touch_end[1]) ** 2)
+        var diff = end_time - start_time
+
+        if (distance_s > 400 && distance_e < 400) {
+          console.log('start' + distance_s)
+          console.log('end' + distance_e)
+
+          msg = {
+            touch_start: touch_start,
+            touch_end: touch_end,
+            diff: diff
+          }
+          socket.emit("touchinfo", msg);
+        }
+
+
+        touch_start = []
+        touch_end = []
+      });
+
+
+    });
+
+
+
+    /////////////////////////////////////////////////////////////////////
+    const socket = io();
+    socket.on("renew", (data) => {
+      Renew(data);
+      ;
+    }
+    );
+
+    socket.on("move", (data) => {
+      Move(data);
+    }
+    );
+
+    socket.on("Add_Delete", (data) => {
+
+      let timerid = window.setInterval(function () {
+        console.log('前処理待ち')
+        if (move_animation == 1) {
+          console.log('処理が行われた')
+          move_animation = 0
+          Add_Delete(data);
+          window.clearInterval(timerid)
+        }
+      }, 400)
+
+        ;
+    }
+    );
+
+    socket.on("startrenew", (data) => {
+      Display(data);
+    });
+
+    socket.on("max", () => {
+      var max = document.getElementById("max")
+      max.innerHTML = "※PLAYできるのは4人までです"
+        ;
+    });
+
+    socket.on("reset", () => {
+
+      alert('RESETしました')
+      window.location.href = '/strike'
+
+    });
+
+
+  </script>
+
+
+</body>
+
+</html>

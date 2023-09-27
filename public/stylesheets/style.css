@@ -76,7 +76,6 @@ a {
   max-width: 1000px;
   max-height: 1000px;
   background-color: #00B7FF;
-
 }   
 
 #canvas{
@@ -190,8 +189,6 @@ a {
 
 .loginbutton{
   text-align: center;
-
-
 }
 
 .usrbtn{
@@ -331,19 +328,6 @@ a {
   width: 75%;
 }
 
-
-
-.toptext{
-  font-size: 65px;
-  font-weight: 600;
-  text-align: right;
-  margin-right: 15%;
-}
-
-.underline{
-  text-decoration: none;
-}
-
 .linktext{
   font-size: 45px;
   font-weight: 600;
@@ -375,7 +359,6 @@ a {
 
 .gamestart{
   text-align: center;
-
 }
 
 .startbtn{
@@ -385,7 +368,6 @@ a {
   color: yellow;
   background-color: transparent;
   border-width: 0;
-
 }
 
 .bottomlink{
@@ -476,3 +458,4 @@ bottom:50px;
   width: 400px;
   height: 300px;
 }
+

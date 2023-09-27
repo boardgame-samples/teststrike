@@ -2,12 +2,26 @@
 <html>
 
 <head>
-  <link rel='stylesheet' href='/stylesheets/style.css' />
+  <link rel='stylesheet' href='/stylesheets/style-strike.css' />
+  <!-- 
   <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@700&display=swap" rel="stylesheet">
+  -->
 </head>
 
 <body text="white" class="bgimage">
 
+
+  <div class=myname>
+    <span id="myname">
+      <%=login.name%>
+    </span>
+  </div>
+
+  <div id="wincontainer" class="wincontainer none">
+    <div id="winmessage" class="winmessage">
+      <span id="winplayer"></span>の勝利。<br>Congratulations!
+    </div>
+  </div>
 
 
   <div id="startarea">
@@ -22,63 +36,75 @@
     <table class="join">
       <tr>
         <td>
-          <form method="post" action="/strike/join">
-            <input name="join" id="join" value="Join" type="submit" class="joinbtn" />
-          </form>
+          <button id="joinbtn" class="joinbtn">JOIN</button>
         </td>
         <td>
-          <form method="post" action="/strike/exit">
-            <input name="exit" id="exit" value="Exit" type="submit" class="joinbtn" />
-          </form>
+          <button id="exitbtn" class="joinbtn">EXIT</button>
         </td>
 
       </tr>
     </table>
 
     <div class="gamestart">
-      <form method="post" action="/strike/start">
-        <input name="start" id="start" value="&gt;&gt;&nbsp;GAME START" type="submit" class="startbtn" />
-      </form>
+      <button id="startbtn" class="startbtn">GAME START</button>
     </div>
   </div>
+
+
   <div id="boardarea" class="none">
 
-    <div id="canvascontainer" class="canvascontainer">
-      <canvas id="canvas" width="1000px" height="1000px">
-        <img id="background" style="display:none" />
-      </canvas>
+    <table class="playerinfo" id="playerinfo">
+      <tr class="playertr" id="playertr">
+      </tr>
+    </table>
+
+    <div class="gap2"></div>
+
+    <div id="pointerCS">
+
+      <table class="message">
+        <tr>
+          <td><span id="message_text" class="message_text">Now loading.....</span></td>
+        </tr>
+        <tr>
+          <td class="continue_stop"><span id="continue"></span><span id="or"></span><span id="stop"></span></td>
+        </tr>
+      </table>
+
     </div>
+
+    <div class="gap"></div>
+    <div id="pointer">
+      <div id="canvascontainer" class="canvascontainer">
+        <canvas id="canvas" width="1000px" height="1000px">
+          <img id="background" style="display:none" />
+        </canvas>
+      </div>
+    </div>
+
+  </div>
+
+
+
+
+  <div class="bottomlink">
 
     <div class="reset-button">
       <form method="post" action="/strike/reset">
         <input class="resetinput" name="reset" id="reset" value="Game Reset" type="submit" />
       </form>
     </div>
-
-  </div>
-
-
-  <div class="bottomlink">
+    <div class="gap2"></div>
     <a class="linktext underline" href="/">&lt;&lt; Topへ戻る</a>
   </div>
 
-  <div id="testbox" class="testbox">
-    <p>sample page</p>
-    <span id="testbox1"></span>
-  </div>
 
-  <div class=myname id="myname">
-    <%= login.name %>
-  </div>
-
-
-  <script src="https://code.jquery.com/jquery-3.6.1.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
 
   <script>
+    var touchstate = 0;
     var move_animation = 0;
 
-    /////////////////////////////////////////////////////////////////////
     class board_dice {
       constructor(value, current, rotate) {
         this.value = value
@@ -90,21 +116,60 @@
       }
     }
 
+    /////////////////////////////////////////////////////////////////////
+    //STARTクリック
+    var startbtn = document.getElementById('startbtn');
+
+    startbtn.addEventListener('click', function () {
+
+      socket.emit("start", '');
+      console.log('クリックされました！');
+
+    }, false);
+
+    //JOINクリック
+    var joinbtn = document.getElementById('joinbtn');
+    joinbtn.addEventListener('click', function () {
+
+      var myname = document.getElementById("myname").textContent
+      var msg = {
+        myname: myname
+      }
+      socket.emit("join", msg);
+      console.log('クリックされました！');
+
+    }, false);
 
 
+    //EXITクリック
+    var exitbtn = document.getElementById('exitbtn');
+    exitbtn.addEventListener('click', function () {
+
+      var myname = document.getElementById("myname").textContent
+      var msg = {
+        myname: myname
+      }
+      socket.emit("exit", msg);
+      console.log('クリックされました！');
+
+    }, false);
+
+    /////////////////////////////////////////////////////////////////////
 
     /////////////////////////////////////////////////////////////////////
     function Display(data) {
+      var myname = document.getElementById("myname").textContent
       var pn = document.getElementById('pn');
       var plist = data.playerlist;
       plength = data.playerlist.length;
       pn.textContent = plength;
       ;
       var participant = document.getElementById('participant');
-      var J = document.getElementById("join")
-      var E = document.getElementById("exit")
-      var myname = document.getElementById("myname").textContent
+      var J = document.getElementById("joinbtn")
+      var E = document.getElementById("exitbtn")
 
+      console.log(myname)
+      console.log(typeof (myname))
 
       //つぎに、joinが白文字exitが黒文字になる設定。
       if (data.word == "join") {
@@ -114,6 +179,7 @@
         if (plist.includes(myname)) {
           J.classList.add("textwhite")
           E.classList.remove("textwhite")
+          console.log('test' + myname)
         }
 
       } else if (data.word == "exit") {
@@ -129,32 +195,180 @@
           E.classList.add("textwhite")
           J.classList.remove("textwhite")
         }
-
       }
     }
 
     /////////////////////////////////////////////////////////////////////
     function Renew(data) {
+      touchstate = 0
       var barea = document.getElementById('boardarea')
       var sarea = document.getElementById('startarea')
       var board_dices = data.board_dices
       var players = data.players
+      var actionstate = data.actionstate
+      var turn = data.turn
+      var playercount = data.playercount
+      var order = Math.floor(turn % playercount)
+      var winner = data.winner
 
       var canvas = document.getElementById("canvas")
       barea.classList.remove("none")
       sarea.classList.add("none")
 
+      var myname = document.getElementById("myname").textContent
+      var pointer = document.getElementById("pointer")
+      var pointerCS = document.getElementById("pointerCS")
+
+      if (actionstate == 0) {
+        if (players[order].name == myname) {
+          //pointer有効にする
+          pointer.classList.add("pointer_auto")
+          pointer.classList.remove("pointer_none")
+          //pointerCSは無効にする
+          pointerCS.classList.add("pointer_none")
+          pointerCS.classList.remove("pointer_auto")
+
+        } else {
+          //pointerは無効にする
+          pointer.classList.add("pointer_none")
+          pointer.classList.remove("pointer_auto")
+          //pointerCSは無効にする
+          pointerCS.classList.add("pointer_none")
+          pointerCS.classList.remove("pointer_auto")
+        }
+      } else if (actionstate == 1) {
+        if (players[order].name == myname) {
+          //pointer無効にする
+          pointer.classList.add("pointer_none")
+          pointer.classList.remove("pointer_auto")
+          //pointerCSは有効にする
+          pointerCS.classList.add("pointer_auto")
+          pointerCS.classList.remove("pointer_none")
+
+        } else {
+          //pointerは無効にする
+          pointer.classList.add("pointer_none")
+          pointer.classList.remove("pointer_auto")
+          //pointerCSは無効にする
+          pointerCS.classList.add("pointer_none")
+          pointerCS.classList.remove("pointer_auto")
+        }
+      } else if (actionstate == 2 || actionstate == 3) {
+        //pointerは無効にする
+        pointer.classList.add("pointer_none")
+        pointer.classList.remove("pointer_auto")
+        //pointerCSは無効にする
+        pointerCS.classList.add("pointer_none")
+        pointerCS.classList.remove("pointer_auto")
+      }
+
+
+      /////player information
+      //毎回、更新する。
+      var namestate = data.namestate
+      var playerlist = data.playerlist
+
+      //playerlist から、name　情報テーブルの追加
+      var playertr = document.getElementById("playertr")
+      playertr.innerHTML = ""
+      for (var i in playerlist) {
+        var td = document.createElement("td")
+
+
+        if (playerlist[i] == myname) {
+          td.innerHTML = "<p>" + "◆" + playerlist[i] + "</p>" + "<p>Dices:"
+            + players[i].dice_number + "</p>"
+            ;
+        } else {
+          td.innerHTML = "<p>" + playerlist[i] + "</p>" + "<p>Dices:"
+            + players[i].dice_number + "</p>"
+        }
+
+
+        if (players[i].dice_number < 1) {
+          if (order == i) {
+            td.className = "playertd_dead turnplayer"
+          } else {
+            td.className = "playertd_dead"
+          }
+        } else {
+          if (order == i) {
+            td.className = "playertd turnplayer"
+          } else {
+            td.className = "playertd"
+          }
+        }
+
+        playertr.appendChild(td);
+      }
+
+      //table messageの更新 
+      var message_text = document.getElementById('message_text')
+      var text_continue = document.getElementById('continue')
+      var text_or = document.getElementById('or')
+      var text_stop = document.getElementById('stop')
+      if (actionstate == 0) {
+
+        if (players[order].name == myname) {
+          message_text.innerHTML = 'あなたのターン。<br>エリア内でダイスを振ってください。'
+        } else {
+          message_text.innerHTML = playerlist[order] + 'がプレイ中。待機。'
+        }
+        text_continue.textContent = ''
+        text_or.textContent = ''
+        text_stop.textContent = ''
+          ;
+      } else if (actionstate == 1) {
+
+        text_continue.onclick = Continue;
+        text_stop.onclick = Stop;
+
+        if (players[order].name == myname) {
+          message_text.innerHTML = 'あなたのターン。'
+          text_continue.innerHTML = 'CONTINUE&nbsp;&nbsp;'
+          text_or.innerHTML = 'or&nbsp;&nbsp;'
+          text_stop.innerHTML = 'STOP'
+        } else {
+          message_text.innerHTML = playerlist[order] + 'がプレイ中。待機。'
+          text_continue.textContent = ''
+          text_or.textContent = ''
+          text_stop.textContent = ''
+        }
+        ;
+      } else if (actionstate == 2) {
+
+        if (players[order].name == myname) {
+          message_text.innerHTML = 'あなたのターン。<br>あなたはゲームを脱落しました。'
+        } else {
+          message_text.innerHTML = playerlist[order] + 'がゲームを脱落しました。'
+        }
+        text_continue.textContent = ''
+        text_or.textContent = ''
+        text_stop.textContent = ''
+
+      } else if (actionstate == 3) {
+        message_text.innerHTML = 'ゲームが終了しました。'
+        text_continue.textContent = ''
+        text_or.textContent = ''
+        text_stop.textContent = ''
+          ;
+        //このあと、下でポップアップを表示する。あなたor～の勝利。Congratulations!
+        var wn = document.getElementById('winmessage')
+        wn.classList.remove("none")
+
+      }
+
+
+
       ctx = canvas.getContext("2d");
       ctx.clearRect(0, 0, 1000, 1000)
-      ctx.fillStyle = "#ffffff";
-      ctx.beginPath();
-      ctx.arc(500, 500, 400, 0, 2 * Math.PI);
-      ctx.closePath();
-      ctx.fill();
+      /*      ctx.fillStyle = "#ffffff";
+            ctx.beginPath();
+            ctx.arc(500, 500, 400, 0, 2 * Math.PI);
+            ctx.closePath();
+            ctx.fill();  */
 
       for (var i in board_dices) {
-
-        ctx.fillStyle = "#111111";
 
         var x = board_dices[i].current[0]
         var y = board_dices[i].current[1]
@@ -164,6 +378,14 @@
         ctx.translate(x, y);
         ctx.rotate(r * Math.PI / 180);
         ctx.translate(-x, -y);
+
+        //ctx.fillStyle = "#ffffff";
+        //ctx.fillRect(x - 50, y - 50, 100, 100);
+        //ctx.strokeRect(x - 50, y - 50, 100, 100);
+        //fillRect, strokeRectの代わりにRoundRect(a,b,c,d)を使う。
+        RoundRect(x - 50, y - 50, 100, 100, 15)
+
+        ctx.fillStyle = "#111111";
         Draw_dice(x, y, z)
         ctx.translate(x, y);
         ctx.rotate(-r * Math.PI / 180);
@@ -171,9 +393,75 @@
 
       }
 
-      var testbox1 = document.getElementById('testbox1')
-      testbox1.innerHTML = 'player_dicenumber:' + players[0].dice_number
 
+
+
+      if (players[order].name == myname && actionstate == 0 && actionstate != 2) {
+
+        let cnt = 0
+        var CC = document.getElementById('canvascontainer')
+        let timerId = setInterval(function () {
+          if (cnt % 2 == 0) {
+            CC.classList.add("canvasboarder")
+          } else {
+            CC.classList.remove("canvasboarder")
+          }
+          if (touchstate == 1) {
+            CC.classList.remove("canvasboarder")
+            clearInterval(timerId);
+          }
+
+          cnt++
+        }, 600);
+      } else if (actionstate == 2) {
+        setTimeout(function () {
+          Stop()
+        }, 3000)
+      } else if(actionstate == 3){
+        var wp = document.getElementById('winplayer')
+        var wc = document.getElementById('wincontainer')
+        wc.classList.remove('none')
+
+        if(winner == myname){
+          wp.textContent = 'あなた'
+        }else{
+          wp.textContent = winner
+        }
+      }
+
+    }
+
+    /////////////////////////////////////////////////////////////////////
+    function RoundRect(a, b, c, d, r) {
+      ctx.beginPath();
+      ctx.moveTo(a + r, b)
+      ctx.arcTo(a + c, b, a + c, b + r, r)
+      ctx.arcTo(a + c, b + d, a + c - r, b + d, r)
+      ctx.arcTo(a, b + d, a, b + d - r, r)
+      ctx.arcTo(a, b, a + r, b, r)
+      ctx.fillStyle = "#ffffff";
+      ctx.fill();
+      ctx.strokeStyle = "#111111";
+      ctx.lineWidth = 4
+      ctx.stroke();
+      ;
+    }
+
+    /////////////////////////////////////////////////////////////////////
+    function Continue() {
+      console.log('continueが押されました')
+      socket.emit("continue", '');
+      var pointerCS = document.getElementById("pointer")
+      pointerCS.classList.add("pointer_none")
+      pointerCS.classList.remove("pointer_auto")
+    }
+
+    function Stop() {
+      console.log('stopが押されました')
+      socket.emit("stop", '');
+      var pointerCS = document.getElementById("pointer")
+      pointerCS.classList.add("pointer_none")
+      pointerCS.classList.remove("pointer_auto")
     }
 
     /////////////////////////////////////////////////////////////////////
@@ -183,36 +471,87 @@
       var canvas = document.getElementById("canvas")
       var move_dice = data.move_dice
       var count = 0
+      var board_length = data.board_length
+      var turn = data.turn
+      var playercount = data.playercount
+      var order = Math.floor(turn % playercount)
+      var myname = document.getElementById("myname").textContent
+
+      /////player information_ moveの前に、毎回player情報更新
+      var playerlist = data.playerlist
+
+      //playerlist から、name　情報テーブルの追加
+      var playertr = document.getElementById("playertr")
+      playertr.innerHTML = ""
+      for (var i in playerlist) {
+        var td = document.createElement("td")
+
+        if (playerlist[i] == myname) {
+          td.innerHTML = "<p>" + "◆" + playerlist[i] + "</p>" + "<p>Dices:"
+            + players[i].dice_number + "</p>"
+            ;
+        } else {
+          td.innerHTML = "<p>" + playerlist[i] + "</p>" + "<p>Dices:"
+            + players[i].dice_number + "</p>"
+        }
+
+        if (players[i].dice_number < 1) {
+          if (order == i) {
+            td.className = "playertd_dead turnplayer"
+          } else {
+            td.className = "playertd_dead"
+          }
+        } else {
+          if (order == i) {
+            td.className = "playertd turnplayer"
+          } else {
+            td.className = "playertd"
+          }
+        }
+        playertr.appendChild(td);
+      }
+
 
       ctx = canvas.getContext("2d");
-
 
       function loop(timestamp) {
         /////////////////move_diceのアニメーション処理///////////////
         if (count % 5 == 0 && count < 95) {
           ctx.clearRect(0, 0, 1000, 1000)
 
-          ctx.fillStyle = "#ffffff";
-          ctx.beginPath();
-          ctx.arc(500, 500, 400, 0, 2 * Math.PI);
-          ctx.closePath();
-          ctx.fill();
 
-          for (var i in board_dices) {
-            ctx.fillStyle = "#111111";
 
-            var x = board_dices[i].current[0]
-            var y = board_dices[i].current[1]
-            var z = board_dices[i].value
-            var r = board_dices[i].rotate
+          /*      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(500, 500, 400, 0, 2 * Math.PI);
+      ctx.closePath();
+      ctx.fill();  */
+          if (board_length == 1) {
 
-            ctx.translate(x, y);
-            ctx.rotate(r * Math.PI / 180);
-            ctx.translate(-x, -y);
-            Draw_dice(x, y, z)
-            ctx.translate(x, y);
-            ctx.rotate(-r * Math.PI / 180);
-            ctx.translate(-x, -y);
+            for (var i in board_dices) {
+
+              var x = board_dices[i].current[0]
+              var y = board_dices[i].current[1]
+              var z = board_dices[i].value
+              var r = board_dices[i].rotate
+
+              ctx.translate(x, y);
+              ctx.rotate(r * Math.PI / 180);
+              ctx.translate(-x, -y);
+
+              //ctx.fillStyle = "#ffffff";
+              //ctx.fillRect(x - 50, y - 50, 100, 100);
+              //ctx.strokeRect(x - 50, y - 50, 100, 100);
+              RoundRect(x - 50, y - 50, 100, 100, 15)
+
+
+              ctx.fillStyle = "#111111";
+
+              Draw_dice(x, y, z)
+              ctx.translate(x, y);
+              ctx.rotate(-r * Math.PI / 180);
+              ctx.translate(-x, -y);
+            }
           }
 
           if (count < 90) {
@@ -224,12 +563,23 @@
           var r = 9 * (Math.floor(Math.random() * 10) + 1);
           var x = move_dice.origin[0]
           var y = move_dice.origin[1]
-          ctx.fillStyle = "#111111";
+          //-20~+20まで
+          var randomX = Math.floor(Math.random() * 40 + 1) - 20
+          var randomY = Math.floor(Math.random() * 40 + 1) - 20
 
           ctx.translate(x, y);
           ctx.rotate(r * Math.PI / 180);
           ctx.translate(-x, -y);
-          Draw_dice(x, y, z)
+
+          //ctx.fillStyle = "#ffffff";
+          //ctx.fillRect(x - 50 + randomX, y - 50 + randomY, 100, 100);
+          //ctx.strokeRect(x - 50 + randomX, y - 50 + randomY, 100, 100);
+          RoundRect(x - 50 + randomX, y - 50 + randomY, 100, 100, 15)
+
+
+          ctx.fillStyle = "#111111";
+
+          Draw_dice(x + randomX, y + randomY, z)
           ctx.translate(x, y);
           ctx.rotate(-r * Math.PI / 180);
           ctx.translate(-x, -y);
@@ -239,18 +589,18 @@
         }
 
         /////////////////board_dicesのアニメーション処理///////////////
-        else if (count % 5 == 0 && count >= 95 && count < 195) {
+        else if (count % 5 == 0 && count >= 95 && count < 145) {
           ctx.clearRect(0, 0, 1000, 1000)
 
-          ctx.fillStyle = "#ffffff";
-          ctx.beginPath();
-          ctx.arc(500, 500, 400, 0, 2 * Math.PI);
-          ctx.closePath();
-          ctx.fill();
+
+          /*      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(500, 500, 400, 0, 2 * Math.PI);
+      ctx.closePath();
+      ctx.fill();  */
 
           for (var i in board_dices) {
             if (board_dices[i].move == 0) {
-              ctx.fillStyle = "#111111";
 
               var x = board_dices[i].current[0]
               var y = board_dices[i].current[1]
@@ -260,6 +610,14 @@
               ctx.translate(x, y);
               ctx.rotate(r * Math.PI / 180);
               ctx.translate(-x, -y);
+
+              //ctx.fillStyle = "#ffffff";
+              //ctx.fillRect(x - 50, y - 50, 100, 100);
+              //ctx.strokeRect(x - 50, y - 50, 100, 100);
+              RoundRect(x - 50, y - 50, 100, 100, 15)
+
+              ctx.fillStyle = "#111111";
+
               Draw_dice(x, y, z)
               ctx.translate(x, y);
               ctx.rotate(-r * Math.PI / 180);
@@ -267,35 +625,47 @@
 
             } else if (board_dices[i].move == 1) {
 
-              if (count < 190) {
+              if (count < 140) {
                 var z = Math.floor(Math.random() * 6) + 1;
                 var r = 9 * (Math.floor(Math.random() * 10) + 1);
+                //-20~+20まで
+                var randomX = Math.floor(Math.random() * 40 + 1) - 20
+                var randomY = Math.floor(Math.random() * 40 + 1) - 20
               } else {
                 var z = board_dices[i].nextvalue
                 var r = board_dices[i].rotate
+                var randomX = 0
+                var randomY = 0
               }
 
               var x = board_dices[i].current[0]
               var y = board_dices[i].current[1]
-              ctx.fillStyle = "#111111";
 
               ctx.translate(x, y);
               ctx.rotate(r * Math.PI / 180);
               ctx.translate(-x, -y);
-              Draw_dice(x, y, z)
+
+              //ctx.fillStyle = "#ffffff";
+              //ctx.fillRect(x - 50 + randomX, y - 50 + randomY, 100, 100);
+              //ctx.strokeRect(x - 50 + randomX, y - 50 + randomY, 100, 100);
+              RoundRect(x - 50 + randomX, y - 50 + randomY, 100, 100, 15)
+
+              ctx.fillStyle = "#111111";
+
+              Draw_dice(x + randomX, y + randomY, z)
               ctx.translate(x, y);
               ctx.rotate(-r * Math.PI / 180);
               ctx.translate(-x, -y);
 
-              board_dices[i].current[0] += board_dices[i].vector[0] / 20
-              board_dices[i].current[1] += board_dices[i].vector[1] / 20
+              board_dices[i].current[0] += board_dices[i].vector[0] / 10
+              board_dices[i].current[1] += board_dices[i].vector[1] / 10
 
             }
           }
         }
 
         /////////////////２つのアニメーション終わったらリターン///////////////
-        else if (count >= 195) {
+        else if (count >= 145) {
           move_animation = 1;
           return;
         }
@@ -333,32 +703,41 @@
         if (count2 % 20 == 0 && count2 < 130) {
 
           ctx.clearRect(0, 0, 1000, 1000)
-          ctx.fillStyle = "#ffffff";
-          ctx.beginPath();
-          ctx.arc(500, 500, 400, 0, 2 * Math.PI);
-          ctx.closePath();
-          ctx.fill();
 
-          for (var i in board_dices) {
-            ctx.fillStyle = "#111111";
-            var x = board_dices[i].current[0]
-            var y = board_dices[i].current[1]
-            var z = board_dices[i].value;
-            var r = board_dices[i].rotate
+          /*      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(500, 500, 400, 0, 2 * Math.PI);
+      ctx.closePath();
+      ctx.fill();  */
+          if ((count2 / 20) % 4 != 1) {
+            for (var i in board_dices) {
+              var x = board_dices[i].current[0]
+              var y = board_dices[i].current[1]
+              var z = board_dices[i].value;
+              var r = board_dices[i].rotate
 
-            ctx.translate(x, y);
-            ctx.rotate(r * Math.PI / 180);
-            ctx.translate(-x, -y);
-            Draw_dice(x, y, z)
-            ctx.translate(x, y);
-            ctx.rotate(-r * Math.PI / 180);
-            ctx.translate(-x, -y);
+              ctx.translate(x, y);
+              ctx.rotate(r * Math.PI / 180);
+              ctx.translate(-x, -y);
+
+              //ctx.fillStyle = "#ffffff";
+              //ctx.fillRect(x - 50, y - 50, 100, 100);
+              //ctx.strokeRect(x - 50, y - 50, 100, 100);
+              RoundRect(x - 50, y - 50, 100, 100, 15)
+
+              ctx.fillStyle = "#111111";
+
+              Draw_dice(x, y, z)
+              ctx.translate(x, y);
+              ctx.rotate(-r * Math.PI / 180);
+              ctx.translate(-x, -y);
+            }
           }
 
           if ((count2 / 20) % 2 == 1) {
             ///////////add, deleteを表示
             for (var i in delete_dices) {
-              ctx.fillStyle = "#ff0000";
+
               var x = delete_dices[i].current[0]
               var y = delete_dices[i].current[1]
               var z = delete_dices[i].value;
@@ -367,6 +746,14 @@
               ctx.translate(x, y);
               ctx.rotate(r * Math.PI / 180);
               ctx.translate(-x, -y);
+
+              //ctx.fillStyle = "#ffffff";
+              //ctx.fillRect(x - 50, y - 50, 100, 100);
+              //ctx.strokeRect(x - 50, y - 50, 100, 100);
+              RoundRect(x - 50, y - 50, 100, 100, 15)
+
+              ctx.fillStyle = "#ff0000";
+
               Draw_dice(x, y, z)
               ctx.translate(x, y);
               ctx.rotate(-r * Math.PI / 180);
@@ -374,7 +761,6 @@
             }
 
             for (var i in add_dices) {
-              ctx.fillStyle = "#ffdc00";
               var x = add_dices[i].current[0]
               var y = add_dices[i].current[1]
               var z = add_dices[i].value;
@@ -383,6 +769,13 @@
               ctx.translate(x, y);
               ctx.rotate(r * Math.PI / 180);
               ctx.translate(-x, -y);
+
+              //ctx.fillStyle = "#ffffff";
+              //ctx.fillRect(x - 50, y - 50, 100, 100);
+              //ctx.strokeRect(x - 50, y - 50, 100, 100);
+              RoundRect(x - 50, y - 50, 100, 100, 15)
+
+              ctx.fillStyle = "#0067c0";
               Draw_dice(x, y, z)
               ctx.translate(x, y);
               ctx.rotate(-r * Math.PI / 180);
@@ -392,6 +785,7 @@
 
 
         } else if (count2 >= 130) {
+          Renew(data);
           return;
         }
 
@@ -407,92 +801,98 @@
     /////////////////////////////////////////////////////////////////////
     function Draw_dice(x, y, z) {
 
-      ctx.strokeRect(x, y, 50, 50);
       ctx.beginPath();
 
       switch (z) {
         case 1:
-          ctx.arc(x + 25, y + 25, 5, 0, 2 * Math.PI);
+          /*ctx.arc(x + 25, y + 25, 5, 0, 2 * Math.PI);
           ctx.closePath();
-          ctx.fill();
+          ctx.fill(); */
+          ctx.strokeStyle = "red"
+          ctx.lineWidth = 8;
+          ctx.moveTo(x - 25, y - 25);
+          ctx.lineTo(x + 25, y + 25);
+          ctx.stroke();
+          ctx.moveTo(x - 25, y + 25);
+          ctx.lineTo(x + 25, y - 25);
+          ctx.stroke();
           break;
         case 2:
-          ctx.arc(x + 15, y + 15, 5, 0, 2 * Math.PI);
+          ctx.arc(x - 20, y - 20, 10, 0, 2 * Math.PI);
           ctx.closePath();
           ctx.fill();
-          ctx.arc(x + 35, y + 35, 5, 0, 2 * Math.PI);
+          ctx.arc(x + 20, y + 20, 10, 0, 2 * Math.PI);
           ctx.closePath();
           ctx.fill();
           break;
         case 3:
-          ctx.arc(x + 25, y + 25, 5, 0, 2 * Math.PI);
+          ctx.arc(x, y, 10, 0, 2 * Math.PI);
           ctx.closePath();
           ctx.fill();
-          ctx.arc(x + 12, y + 38, 5, 0, 2 * Math.PI);
+          ctx.arc(x - 25, y - 25, 10, 0, 2 * Math.PI);
           ctx.closePath();
           ctx.fill();
-          ctx.arc(x + 38, y + 12, 5, 0, 2 * Math.PI);
+          ctx.arc(x + 25, y + 25, 10, 0, 2 * Math.PI);
           ctx.closePath();
           ctx.fill();
           break;
         case 4:
-          ctx.arc(x + 15, y + 15, 5, 0, 2 * Math.PI);
+          ctx.arc(x - 20, y - 20, 10, 0, 2 * Math.PI);
           ctx.closePath();
           ctx.fill();
-          ctx.arc(x + 35, y + 35, 5, 0, 2 * Math.PI);
+          ctx.arc(x + 20, y + 20, 10, 0, 2 * Math.PI);
           ctx.closePath();
           ctx.fill();
-          ctx.arc(x + 15, y + 35, 5, 0, 2 * Math.PI);
+          ctx.arc(x - 20, y + 20, 10, 0, 2 * Math.PI);
           ctx.closePath();
           ctx.fill();
-          ctx.arc(x + 35, y + 15, 5, 0, 2 * Math.PI);
+          ctx.arc(x + 20, y - 20, 10, 0, 2 * Math.PI);
           ctx.closePath();
           ctx.fill();
           break;
         case 5:
-          ctx.arc(x + 25, y + 25, 5, 0, 2 * Math.PI);
+          ctx.arc(x, y, 10, 0, 2 * Math.PI);
           ctx.closePath();
           ctx.fill();
-          ctx.arc(x + 12, y + 38, 5, 0, 2 * Math.PI);
+          ctx.arc(x - 25, y - 25, 10, 0, 2 * Math.PI);
           ctx.closePath();
           ctx.fill();
-          ctx.arc(x + 38, y + 12, 5, 0, 2 * Math.PI);
+          ctx.arc(x + 25, y + 25, 10, 0, 2 * Math.PI);
           ctx.closePath();
           ctx.fill();
-          ctx.arc(x + 12, y + 12, 5, 0, 2 * Math.PI);
+          ctx.arc(x - 25, y + 25, 10, 0, 2 * Math.PI);
           ctx.closePath();
           ctx.fill();
-          ctx.arc(x + 38, y + 38, 5, 0, 2 * Math.PI);
+          ctx.arc(x + 25, y - 25, 10, 0, 2 * Math.PI);
           ctx.closePath();
           ctx.fill();
+
           break;
         case 6:
-          ctx.arc(x + 15, y + 10, 5, 0, 2 * Math.PI);
+          ctx.arc(x - 20, y - 25, 10, 0, 2 * Math.PI);
           ctx.closePath();
           ctx.fill();
-          ctx.arc(x + 15, y + 25, 5, 0, 2 * Math.PI);
+          ctx.arc(x + 20, y - 25, 10, 0, 2 * Math.PI);
           ctx.closePath();
           ctx.fill();
-          ctx.arc(x + 15, y + 40, 5, 0, 2 * Math.PI);
+          ctx.arc(x - 20, y, 10, 0, 2 * Math.PI);
           ctx.closePath();
           ctx.fill();
-          ctx.arc(x + 35, y + 10, 5, 0, 2 * Math.PI);
+          ctx.arc(x + 20, y, 10, 0, 2 * Math.PI);
           ctx.closePath();
           ctx.fill();
-          ctx.arc(x + 35, y + 25, 5, 0, 2 * Math.PI);
+          ctx.arc(x - 20, y + 25, 10, 0, 2 * Math.PI);
           ctx.closePath();
           ctx.fill();
-          ctx.arc(x + 35, y + 40, 5, 0, 2 * Math.PI);
+          ctx.arc(x + 20, y + 25, 10, 0, 2 * Math.PI);
           ctx.closePath();
           ctx.fill();
           break;
       }
-
     }
 
 
     window.addEventListener("load", () => {
-      var testbox = document.getElementById("testbox")
       const cc = document.getElementById("canvascontainer")
       let touch_start
       let start_time
@@ -546,7 +946,12 @@
             touch_end: touch_end,
             diff: diff
           }
+          touchstate = 1
           socket.emit("touchinfo", msg);
+
+          var pointer = document.getElementById("pointer")
+          pointer.classList.add("pointer_none")
+          pointer.classList.remove("pointer_auto")
         }
 
 
@@ -582,9 +987,8 @@
           Add_Delete(data);
           window.clearInterval(timerid)
         }
-      }, 400)
+      }, 200)
 
-        ;
     }
     );
 

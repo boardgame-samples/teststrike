@@ -5,7 +5,7 @@
     conten="text/thml; charset=UTF-8"> 
     <link rel='stylesheet' href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" 
     crossorigin="anonymous" >
-    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <link rel='stylesheet' href='/stylesheets/style-users.css' />
   </head>
 
   <body class="container bgimage">
@@ -14,7 +14,11 @@
     <div class="gap2"></div>
 
     <div role="main">
-        <p><%- content %></p>
+        <p><%- content1 %></p>
+        <div class="smallcharacter">
+        <p><%- content2 %></p>
+        <p><%- content3 %></p>
+        </div>
         
         <div class="namepass">
         <form method="post" action="/users/login">
@@ -23,10 +27,6 @@
                 <input type="text" name="name"  id="name" class="form-control form-size">
             </div>
             <div class="gap"></div>
-            <div class="form-group">
-                <label for="pass">PASSWORD</label>
-                <input type="password" name="pass"  id="pass" class="form-control form-size">
-            </div>
             <div class="gap"></div>
             <div class="loginbutton">
             <input type="submit" value="login" class="usrbtn">
@@ -39,7 +39,7 @@
 
         <div class="linktext" >
         <p><a  href="/users/add">&lt;&lt; アカウントを作成する</a></p>
-        <div class="gap"></div>
+        <br>
         <p><a href="/">&lt;&lt; Topへ戻る</a></p>
         </div>
 
