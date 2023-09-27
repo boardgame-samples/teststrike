@@ -65,8 +65,8 @@ io.on("connection", (socket) => {
     var touch_end = msg.touch_end;
     var diff = msg.diff
 
-    var newX = touch_start[0] + (touch_end[0] - touch_start[0]) * (500 / diff)
-    var newY = touch_start[1] + (touch_end[1] - touch_start[1]) * (500 / diff)
+    var newX = touch_start[0] + (touch_end[0] - touch_start[0]) * (200 / diff)
+    var newY = touch_start[1] + (touch_end[1] - touch_start[1]) * (200 / diff)
 
     if (newY < 51) {
       if (newX < 500) {
