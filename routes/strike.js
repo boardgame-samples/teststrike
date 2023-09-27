@@ -718,6 +718,7 @@ router.post('/reset', function (req, res, next) {
   delete_dices = []
   namestate = 0;
   winner = ''
+  actionstate = 0;
 
 
 
