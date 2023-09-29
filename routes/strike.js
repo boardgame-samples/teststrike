@@ -710,6 +710,7 @@ router.get('/', function (req, res, next) {
 /* ReSetを クリック */
 router.post('/reset', function (req, res, next) {
   gamestate = 0;
+  actionstate = 0;
   playerlist = []
   players = []
   turn = 0
