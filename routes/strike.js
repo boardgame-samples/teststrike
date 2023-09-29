@@ -463,6 +463,7 @@ io.on("connection", (socket) => {
       //trueならリストから削除
       var index = playerlist.indexOf(val)
       playerlist.splice(index, 1)
+      players.splice(index, 1)
 
       msg = {
         playerlist: playerlist,
@@ -718,8 +719,6 @@ router.post('/reset', function (req, res, next) {
   delete_dices = []
   namestate = 0;
   winner = ''
-  actionstate = 0;
- 
 
 
 

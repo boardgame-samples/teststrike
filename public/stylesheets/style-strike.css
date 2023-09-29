@@ -30,7 +30,7 @@ body{
   font-size: 40px;
   line-height:100%;
   background-color: burlywood;
-  font-family: 'Zen Maru Gothic', sans-serif;
+  font-family:cursive;
   color: white;
 }
 
@@ -56,6 +56,10 @@ body{
 
 .underline{
   text-decoration: none;
+}
+
+.enable_underline{
+  text-decoration:underline;
 }
 
 .message{
@@ -95,6 +99,7 @@ body{
 
 .gamestart{
   text-align: center;
+
 }
 
 .startbtn{
@@ -104,6 +109,7 @@ body{
   color: yellow;
   background-color: transparent;
   border-width: 0;
+  text-decoration:underline;
 }
 
 .none{
@@ -127,6 +133,14 @@ body{
 }
 
 .canvasboarder{
+  display: block;
+    width: 1000px;
+    height: 1000px;
+    background-image: url("../images/strike/circle-arrow.png");
+    background-size: 1000px,1000px;
+    background-position:center center;
+
+
  /* border: 15px solid;
   border-color: rgba(255, 88, 88, 0.7); */
   outline: 20px solid  rgba(255, 88, 88, 0.7);
@@ -234,6 +248,8 @@ bottom:50px;
 
 .continue_stop{
   color: yellow;
+  margin-top: 25px;
+  margin-bottom: 15px;
 }
 
 .turnplayer{

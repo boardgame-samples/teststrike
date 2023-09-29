@@ -45,6 +45,8 @@
       </tr>
     </table>
 
+    <div class="gap2"></div>
+
     <div class="gamestart">
       <button id="startbtn" class="startbtn">GAME START</button>
     </div>
@@ -67,7 +69,7 @@
           <td><span id="message_text" class="message_text">Now loading.....</span></td>
         </tr>
         <tr>
-          <td class="continue_stop"><span id="continue"></span><span id="or"></span><span id="stop"></span></td>
+          <td class="continue_stop"><span class="enable_underline" id="continue"></span><span id="or"></span><span class="enable_underline" id="stop"></span></td>
         </tr>
       </table>
 
@@ -325,8 +327,8 @@
 
         if (players[order].name == myname) {
           message_text.innerHTML = 'あなたのターン。'
-          text_continue.innerHTML = 'CONTINUE&nbsp;&nbsp;'
-          text_or.innerHTML = 'or&nbsp;&nbsp;'
+          text_continue.innerHTML = 'CONTINUE'
+          text_or.innerHTML = '&nbsp;&nbsp;or&nbsp;&nbsp;'
           text_stop.innerHTML = 'STOP'
         } else {
           message_text.innerHTML = playerlist[order] + 'がプレイ中。待機。'
@@ -403,10 +405,13 @@
         let timerId = setInterval(function () {
           if (cnt % 2 == 0) {
             CC.classList.add("canvasboarder")
+            CC.classList.remove("canvascontainer")
           } else {
+            CC.classList.add("canvascontainer")
             CC.classList.remove("canvasboarder")
           }
           if (touchstate == 1) {
+            CC.classList.add("canvascontainer")
             CC.classList.remove("canvasboarder")
             clearInterval(timerId);
           }
@@ -487,11 +492,11 @@
         var td = document.createElement("td")
 
         if (playerlist[i] == myname) {
-          td.innerHTML = "<p>" + "◆" + playerlist[i] + "</p>" + "<p>Dices:"
+          td.innerHTML = "<p>" + "◆" + playerlist[i] + "</p>" + "<p>Dice:"
             + players[i].dice_number + "</p>"
             ;
         } else {
-          td.innerHTML = "<p>" + playerlist[i] + "</p>" + "<p>Dices:"
+          td.innerHTML = "<p>" + playerlist[i] + "</p>" + "<p>Dice:"
             + players[i].dice_number + "</p>"
         }
 

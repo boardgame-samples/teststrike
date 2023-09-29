@@ -29,7 +29,7 @@ body{
   font-size: 40px;
   line-height:100%;
   background-color: burlywood;
-  font-family: 'Zen Maru Gothic', sans-serif;
+  font-family:cursive;
   color: white;
 }
 
@@ -38,7 +38,7 @@ body{
 }
 
 .bgimage{
-  background-image: url("../images/users/20.9.JPG");
+  background-image: url("../images/users/table.jpg");
   background-size: cover;
   background-position:center center;
   background-repeat: no-repeat;

@@ -29,12 +29,12 @@ body{
   font-size: 40px;
   line-height:100%;
   background-color: burlywood;
-  font-family: 'Zen Maru Gothic', sans-serif;
+  font-family:cursive;
   color: white;
 }
 
 .bgimage{
-  background-image: url("../images/top/green3.png");
+  background-image: url("../images/top/background2.png");
   background-size: cover;
   background-position:center center;
   background-repeat: no-repeat;
@@ -55,13 +55,15 @@ body{
 }
 
 .toptext{
-  font-size: 65px;
+  font-size: 80px;
   font-weight: 600;
   text-align: right;
   margin-right: 15%;
+
 }
 
 .underline{
   text-decoration: none;
+  color: khaki;
 }
 
