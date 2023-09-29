@@ -312,7 +312,7 @@
       if (actionstate == 0) {
 
         if (players[order].name == myname) {
-          message_text.innerHTML = 'あなたのターン。<br>エリア内でダイスを振ってください。'
+          message_text.innerHTML = 'あなたのターン<br>エリア内でダイスを振ってください。'
         } else {
           message_text.innerHTML = playerlist[order] + 'がプレイ中。待機。'
         }
@@ -326,7 +326,7 @@
         text_stop.onclick = Stop;
 
         if (players[order].name == myname) {
-          message_text.innerHTML = 'あなたのターン。'
+          message_text.innerHTML = 'あなたのターン'
           text_continue.innerHTML = 'CONTINUE'
           text_or.innerHTML = '&nbsp;&nbsp;or&nbsp;&nbsp;'
           text_stop.innerHTML = 'STOP'
@@ -340,7 +340,7 @@
       } else if (actionstate == 2) {
 
         if (players[order].name == myname) {
-          message_text.innerHTML = 'あなたのターン。<br>あなたはゲームを脱落しました。'
+          message_text.innerHTML = 'あなたのターン<br>あなたはゲームを脱落しました。'
         } else {
           message_text.innerHTML = playerlist[order] + 'がゲームを脱落しました。'
         }
