@@ -182,10 +182,25 @@ body{
   text-decoration:underline;
 }
 
+.mute_btn{
+  width: 250px;
+  height: 50px;
+  margin: 0 0 0 auto;
+  font-size: 36px;
+  padding: 10px;
+  color: #11a6ebce;
+  text-decoration:underline;
+}
+
 .bottomlink{
   position:fixed;
 right:50px;
 bottom:50px;
+}
+
+.boardinfo{
+  text-align: right;
+  color: brown;
 }
 
 .linktext{
@@ -245,6 +260,10 @@ bottom:50px;
   height: 20px;
 }
 
+.gap3{
+  height: 200px;
+}
+
 .continue_stop{
   color: yellow;
   margin-top: 25px;
@@ -279,4 +298,16 @@ bottom:50px;
   line-height: 100px;
   font-weight: 700;
   color: red;
+}
+
+.rulelist{
+  font-size: 13px;
+  margin-left: 100px;
+  margin-right: 50px;
+  list-style-type: disc;
+}
+
+.rule{
+  font-size: 28px;
+  text-align: center;
 }

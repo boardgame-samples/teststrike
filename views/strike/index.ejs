@@ -10,6 +10,12 @@
 
 <body text="white" class="bgimage">
 
+  <audio id="audio">
+    <source src="sounds/turn.mp3" type="audio/mp3">
+  </audio>
+
+
+
 
   <div class=myname>
     <span id="myname">
@@ -50,6 +56,20 @@
     <div class="gamestart">
       <button id="startbtn" class="startbtn">GAME START</button>
     </div>
+
+    <div class="gap3"></div>
+    <p class="rule">-ルール-</p>
+    <div class="gap2"></div>
+    <ul class="rulelist">
+      <li>自分のターンに所持しているダイスを一個フィールドに投げる。</li>
+      <li>ダイスがフィールドから飛び出た時、もしくはダイスの目が1の時にダイスはフィールドから取り除かれる。</li>
+      <li>１以外の数字の出目が２個以上出た時、それらのダイスを全て獲得する。</li>
+      <li>一度投げた後は、もう一度ターンを続けるか終了するかを選択できる。</li>
+      <li>ダイスを持っているプレイヤーが一人だけになった時、その残ったプレイヤーが勝者となる。</li>
+      <li>フィールド上のダイスが無くなった時、次のプレイヤーは所持するダイスを全て振らなければならない。</li>
+    </ul>
+
+
   </div>
 
 
@@ -69,7 +89,8 @@
           <td><span id="message_text" class="message_text">Now loading.....</span></td>
         </tr>
         <tr>
-          <td class="continue_stop"><span class="enable_underline" id="continue"></span><span id="or"></span><span class="enable_underline" id="stop"></span></td>
+          <td class="continue_stop"><span class="enable_underline" id="continue"></span><span id="or"></span><span
+              class="enable_underline" id="stop"></span></td>
         </tr>
       </table>
 
@@ -82,6 +103,10 @@
           <img id="background" style="display:none" />
         </canvas>
       </div>
+    </div>
+    <div class="gap2"></div>
+    <div>
+      <p class="boardinfo" id="boardinfo"></p>
     </div>
 
   </div>
@@ -96,6 +121,8 @@
         <input class="resetinput" name="reset" id="reset" value="Game Reset" type="submit" />
       </form>
     </div>
+
+    <div class="mute_btn" onClick="mute()">unmute/mute</div>
     <div class="gap2"></div>
     <a class="linktext underline" href="/">&lt;&lt; Topへ戻る</a>
   </div>
@@ -159,7 +186,19 @@
     /////////////////////////////////////////////////////////////////////
 
     /////////////////////////////////////////////////////////////////////
+    // muteの切り替え
+    function mute() {
+      if (document.getElementById('audio').muted) {
+        document.getElementById('audio').muted = false;
+      } else {
+        document.getElementById('audio').muted = true;
+      }
+    }
+
+
+    /////////////////////////////////////////////////////////////////////
     function Display(data) {
+      document.getElementById('audio').muted = true;
       var myname = document.getElementById("myname").textContent
       var pn = document.getElementById('pn');
       var plist = data.playerlist;
@@ -202,6 +241,7 @@
 
     /////////////////////////////////////////////////////////////////////
     function Renew(data) {
+
       touchstate = 0
       var barea = document.getElementById('boardarea')
       var sarea = document.getElementById('startarea')
@@ -212,6 +252,7 @@
       var playercount = data.playercount
       var order = Math.floor(turn % playercount)
       var winner = data.winner
+      var sound_count = data.sound_count
 
       var canvas = document.getElementById("canvas")
       barea.classList.remove("none")
@@ -221,8 +262,28 @@
       var pointer = document.getElementById("pointer")
       var pointerCS = document.getElementById("pointerCS")
 
+
+
+      var boardinfo = document.getElementById("boardinfo")
+      var boardlist = []
+      for (var i in board_dices) {
+        boardlist.push(board_dices[i].value)
+      }
+
+      if (boardlist.length == 0) {
+        boardinfo.textContent = ""
+      } else {
+        boardinfo.textContent = "field dice:" + boardlist;
+      }
+
+
       if (actionstate == 0) {
         if (players[order].name == myname) {
+          if (sound_count == 0) {
+            document.getElementById('audio').play();
+          }
+
+
           //pointer有効にする
           pointer.classList.add("pointer_auto")
           pointer.classList.remove("pointer_none")
@@ -422,14 +483,14 @@
         setTimeout(function () {
           Stop()
         }, 3000)
-      } else if(actionstate == 3){
+      } else if (actionstate == 3) {
         var wp = document.getElementById('winplayer')
         var wc = document.getElementById('wincontainer')
         wc.classList.remove('none')
 
-        if(winner == myname){
+        if (winner == myname) {
           wp.textContent = 'あなた'
-        }else{
+        } else {
           wp.textContent = winner
         }
       }

@@ -24,6 +24,7 @@ var move_dice = {
 }
 var board_length = 0
 var winner
+var sound_count = 0
 
 
 
@@ -479,6 +480,7 @@ io.on("connection", (socket) => {
   /*  /// continueクリック */
   socket.on("continue", (data) => {
     actionstate = 0;
+    sound_count +=1
     Renew()
 
   })
@@ -486,7 +488,8 @@ io.on("connection", (socket) => {
   /*  /// STOPクリック */
   socket.on("stop", (data) => {
     actionstate = 0;
-    var tmax = 0
+    sound_count = 0
+    var tmax = 0;
     //turncheckして、dice0ならとばす    players[order].dice_number
     do {
       turn += 1;
@@ -623,7 +626,8 @@ function Renew() {
     namestate: namestate,
     turn: turn,
     playercount: playercount,
-    winner:winner
+    winner:winner,
+    sound_count:sound_count
   }
 
   // const io = require('../bin/www.js');
@@ -720,6 +724,7 @@ router.post('/reset', function (req, res, next) {
   delete_dices = []
   namestate = 0;
   winner = ''
+  sound_count = 0
 
 
 
