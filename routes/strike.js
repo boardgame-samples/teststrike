@@ -129,7 +129,7 @@ io.on("connection", (socket) => {
         }
       }
       players[order].dice_number = 1;
-    }else{
+    } else {
       board_length = 1;
     }
 
@@ -331,9 +331,9 @@ io.on("connection", (socket) => {
         //重複してない場合、、、
         for (var i in board_dices) {
           if (board_dices[i].value == k) {
-            if(k==1){
+            if (k == 1) {
               delete_dices.push(board_dices[i])
-            }else{
+            } else {
               board_dices_temp.push(board_dices[i])
             }
 
@@ -349,9 +349,9 @@ io.on("connection", (socket) => {
 
     //Adddeleteのあと、renewで更新するため、actionstate=1に。
     actionstate = 1
-    if(players[order].dice_number <1){
-    actionstate = 2;
-    } 
+    if (players[order].dice_number < 1) {
+      actionstate = 2;
+    }
     //このプレイヤーはdeadになる。今後現れない。
     //actionstate == 2のとき、自動敵にstopし、次の人へ。
 
@@ -359,15 +359,15 @@ io.on("connection", (socket) => {
     //勝者がいれば、とりあえずalert()で表示。
     Winner();
 
-    function Winner(){
+    function Winner() {
       var dice_sum = 0
-      for(var i in players){
-        if(players[i].dice_number > 0){
+      for (var i in players) {
+        if (players[i].dice_number > 0) {
           dice_sum += 1;
           winner = playerlist[i];
         }
       }
-      if(dice_sum == 1){
+      if (dice_sum == 1) {
         actionstate = 3
       }
       ;
@@ -480,7 +480,7 @@ io.on("connection", (socket) => {
   /*  /// continueクリック */
   socket.on("continue", (data) => {
     actionstate = 0;
-    sound_count +=1
+    sound_count += 1
     Renew()
 
   })
@@ -498,6 +498,79 @@ io.on("connection", (socket) => {
     } while (players[order].dice_number < 1 && tmax < 6)
     Renew()
   })
+
+
+
+  //RETRYをクリック。　盤面をある程度戻して、start処理行う。
+  socket.on('retry', () => {
+
+    //先に点滅を止める必要。
+    socketapi.io.emit("retry", '');
+
+    gamestate = 0;
+    actionstate = 0;
+    turn = 0
+    order= 0
+    board_dices = []
+    board_dices_temp = []
+    delete_dices = []
+    namestate = 0;
+    winner = ''
+    sound_count = 0
+    playerlist = []
+
+
+    
+    var players_temp = players.slice()
+    for(var i in players){
+      if(i != 0){
+        players[i] = players_temp[i-1]
+      }else{
+        players[i] = players_temp[players.length - 1]
+      }
+      ;
+    }
+
+    for(var i in players){
+      playerlist.push(players[i].name)
+      ;
+    }
+
+
+
+    //ここから先はstartと同じ。
+    gamestate = 1;
+    turn = 0
+    playercount = players.length
+    var initial_dices
+    if (playercount == 2) {
+      initial_dices = 8;
+    } else if (playercount == 3) {
+      initial_dices = 7
+    } else if (playercount == 4) {
+      initial_dices = 6;
+    } else if (playercount == 5) {
+      initial_dices = 5;
+    } else {
+      initial_dices = 6;
+    }
+
+    for (var i in players) {
+      players[i].dice_number = initial_dices
+    }
+
+    var ini_value = Math.floor(Math.random() * 5) + 2;
+    var ini_current = [500, 500]
+    var ini_rotate = 30 * (Math.floor(Math.random() * 12) + 1);
+    const bd = new board_dice(ini_value, ini_current, ini_rotate)
+    board_dices.push(bd)
+
+    setTimeout(function () {
+      Renew()
+    }, 1000)
+
+    namestate = 1;
+  });
 
 
 });
@@ -626,8 +699,9 @@ function Renew() {
     namestate: namestate,
     turn: turn,
     playercount: playercount,
-    winner:winner,
-    sound_count:sound_count
+    winner: winner,
+    sound_count: sound_count,
+
   }
 
   // const io = require('../bin/www.js');
@@ -644,8 +718,8 @@ function Move() {
     playerlist: playerlist,
     turn: turn,
     playercount: playercount,
-    board_length:board_length,
-    winner:winner
+    board_length: board_length,
+    winner: winner
   }
     ;
   socketapi.io.emit("move", msg);
@@ -663,7 +737,7 @@ function Add_Delete() {
     add_dices: add_dices,
     turn: turn,
     playercount: playercount,
-    winner:winner
+    winner: winner
   }
 
   // const io = require('../bin/www.js');
@@ -727,7 +801,6 @@ router.post('/reset', function (req, res, next) {
   sound_count = 0
 
 
-
   //const io = require('../bin/www.js');
   //const socketapi = require("../socketapi");
   socketapi.io.emit("reset", '');
@@ -735,7 +808,20 @@ router.post('/reset', function (req, res, next) {
 });
 
 
+//プレイヤーシャッフルする関数
+const shuffleArray = (array) => {
+  const cloneArray = [...array]
 
+  for (let i = cloneArray.length - 1; i >= 0; i--) {
+    let rand = Math.floor(Math.random() * (i + 1))
+    // 配列の要素の順番を入れ替える
+    let tmpStorage = cloneArray[i]
+    cloneArray[i] = cloneArray[rand]
+    cloneArray[rand] = tmpStorage
+  }
+
+  return cloneArray
+}
 
 
 

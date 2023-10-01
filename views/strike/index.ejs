@@ -115,22 +115,25 @@
 
 
   <div class="bottomlink">
+
     <div class="reset-button">
       <form method="post" action="/strike/reset">
         <input class="resetinput" name="reset" id="reset" value="Game Reset" type="submit" />
       </form>
     </div>
-    <div class="mute_btn" onClick="mute()">unmute/mute</div>
-    <div>
-      <a class="linktext underline" href="/">&lt;&lt; Topへ戻る</a>
-    </div>
+    <div id="retry" class="retry pointer_none" onclick="Retry()">Retry</div>
+    <div class="mute_btn" onClick="mute()">Unmute/Mute</div>
+
+
   </div>
+  <a class="linktext underline" href="/">&lt;&lt; Topへ戻る</a>
 
   <script src="/socket.io/socket.io.js"></script>
 
   <script>
     var touchstate = 0;
     var move_animation = 0;
+    let timerId
 
     class board_dice {
       constructor(value, current, rotate) {
@@ -180,6 +183,13 @@
       console.log('クリックされました！');
 
     }, false);
+
+    //RETRYクリック
+    function Retry() {
+      socket.emit("retry", '');
+      ;
+    }
+
 
     /////////////////////////////////////////////////////////////////////
 
@@ -251,6 +261,9 @@
       var order = Math.floor(turn % playercount)
       var winner = data.winner
       var sound_count = data.sound_count
+      var retry_count = data.retry_count
+      var gamestate = data.gamestate
+
 
       var canvas = document.getElementById("canvas")
       barea.classList.remove("none")
@@ -259,7 +272,12 @@
       var myname = document.getElementById("myname").textContent
       var pointer = document.getElementById("pointer")
       var pointerCS = document.getElementById("pointerCS")
+      var retryarea = document.getElementById("retry")
 
+      if (actionstate != 3) {
+        var wc = document.getElementById('wincontainer')
+        wc.classList.add("none")
+      }
 
 
       var boardinfo = document.getElementById("boardinfo")
@@ -274,7 +292,15 @@
         boardinfo.textContent = "field dice:" + boardlist;
       }
 
-
+      //retryボタンは、gamestate が1の時のみ有効。
+      if(gamestate == 0){
+        retryarea.classList.add("pointer_none")
+        retryarea.classList.remove("pointer_auto")
+      }else if(gamestate == 1){
+        retryarea.classList.add("pointer_auto")
+        retryarea.classList.remove("pointer_none")
+      }
+      
       if (actionstate == 0) {
         if (players[order].name == myname) {
           if (sound_count == 0) {
@@ -461,7 +487,8 @@
 
         let cnt = 0
         var CC = document.getElementById('canvascontainer')
-        let timerId = setInterval(function () {
+
+        timerId = setInterval(function () {
           if (cnt % 2 == 0) {
             CC.classList.add("canvasboarder")
             CC.classList.remove("canvascontainer")
@@ -539,6 +566,7 @@
       var turn = data.turn
       var playercount = data.playercount
       var order = Math.floor(turn % playercount)
+
       var myname = document.getElementById("myname").textContent
 
       /////player information_ moveの前に、毎回player情報更新
@@ -1035,6 +1063,16 @@
       ;
     }
     );
+
+    socket.on("retry", (data) => {
+      var CC = document.getElementById('canvascontainer')
+      CC.classList.add("canvascontainer")
+      CC.classList.remove("canvasboarder")
+      clearInterval(timerId);
+    }
+    );
+
+
 
     socket.on("move", (data) => {
       Move(data);
