@@ -263,6 +263,7 @@
       var sound_count = data.sound_count
       var retry_count = data.retry_count
       var gamestate = data.gamestate
+      var add_state = data.add_state
 
 
       var canvas = document.getElementById("canvas")
@@ -412,9 +413,17 @@
 
         if (players[order].name == myname) {
           message_text.innerHTML = 'あなたのターン'
-          text_continue.innerHTML = 'CONTINUE'
-          text_or.innerHTML = '&nbsp;&nbsp;or&nbsp;&nbsp;'
           text_stop.innerHTML = 'STOP'
+
+          if(add_state == 0){
+            text_continue.innerHTML = 'CONTINUE'
+          text_or.innerHTML = '&nbsp;&nbsp;or&nbsp;&nbsp;'
+          }else if(add_state == 1){
+            text_continue.innerHTML = ''
+          text_or.innerHTML = ''
+          }
+
+
         } else {
           message_text.innerHTML = playerlist[order] + 'がプレイ中。待機。'
           text_continue.textContent = ''

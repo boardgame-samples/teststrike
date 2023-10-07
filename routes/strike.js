@@ -25,6 +25,7 @@ var move_dice = {
 var board_length = 0
 var winner
 var sound_count = 0
+var add_state = 0
 
 
 
@@ -327,6 +328,10 @@ io.on("connection", (socket) => {
           }
         }
 
+        if(add_number > 0){
+          add_state = 1;
+        }
+
       } else {
         //重複してない場合、、、
         for (var i in board_dices) {
@@ -375,8 +380,9 @@ io.on("connection", (socket) => {
 
     setTimeout(function () {
       Add_Delete()
+      add_state = 0;
     }, 2000);
-
+  
 
     var dicevalues = []
     for (var i in board_dices) {
@@ -701,6 +707,7 @@ function Renew() {
     playercount: playercount,
     winner: winner,
     sound_count: sound_count,
+    add_state:add_state
 
   }
 
@@ -737,7 +744,8 @@ function Add_Delete() {
     add_dices: add_dices,
     turn: turn,
     playercount: playercount,
-    winner: winner
+    winner: winner,
+    add_state:add_state
   }
 
   // const io = require('../bin/www.js');
